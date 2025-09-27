@@ -1,0 +1,1 @@
+The main server internal key is: SECRET_LAB_2024_KEY_DO_NOT_SHARE

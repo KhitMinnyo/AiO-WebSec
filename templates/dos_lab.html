@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}AIO-WebSec: DoS / Automation Lab{% endblock %}
+
+{% block content %}
+<div class="lab-container">
+    <h2>8. Denial of Service (DoS) / Insufficient Anti-Automation Lab</h2>
+    <p class="description">
+        Practice techniques that can excessively use system resources and insufficient rate limiting controls here.
+        At Low Level, try sending many requests in a short time to observe server response slowdown.
+    </p>
+
+    <div class="section-box">
+        <h3>Lack of Rate Limiting & Resource Exhaustion</h3>
+        <p>
+            This search function adds an unnecessary **time delay (1 second)** for each request at Low Level.
+            If you send many requests simultaneously using an automation tool (e.g., Burp Intruder or a script), server resources can be quickly exhausted.
+        </p>
+
+        <form method="GET" action="{{ url_for('dos_lab') }}">
+            <input type="hidden" name="action" value="search">
+            <label for="search_input">Search Query:</label>
+            <input type="text" id="search_input" name="search" placeholder="Search product name..." required>
+            <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+
+        {% if message %}
+            <div class="message {% if 'rate-limited' in message|lower or level == 2 %}success{% else %}warning{% endif %}">
+                <strong>Response:</strong> {{ message }}
+            </div>
+        {% endif %}
+
+        <p class="note" style="margin-top: 20px;">
+            **[Low Level Lab Note]** You can test **Time-Based DoS** by sending thousands of requests to this search URL using Burp Suite Intruder or the `requests` library with multiple threads (fuzzing).
+        </p>
+    </div>
+
+    <div class="section-box">
+        <h3>Insufficient Anti-Automation (Account Creation Abuse)</h3>
+        <p>
+            To test **Account Creation Abuse** (e.g., creating many spam accounts), a **`/register`** route is created in `app.py`.
+        </p>
+        <p>
+            At Low Level, the **`/register`** route does not have **CAPTCHA** or **Rate Limiting**. Test with automation tools to see if you can insert many users into the database in a short time.
+        </p>
+        
+        <a href="#" class="btn btn-primary" onclick="alert('The /register route is configured to be vulnerable in the low-level Flask code. Use your automation tool to hit this route repeatedly.')">
+            Go to Register Page (Simulation)
+        </a>
+        
+    </div>
+
+</div>
+{% endblock %}

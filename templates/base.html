@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AIO-WebSec: Vulnerability Lab{% endblock %}</title>
+    <style>
+        /* Basic CSS for the Lab - Real CSS should be in a separate file (style.css) */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 1.8em;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+        nav a:hover {
+            color: #3498db;
+        }
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .lab-container {
+            padding: 20px 0;
+        }
+        .section-box {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            background-color: #f9f9f9;
+        }
+        .message {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border-color: #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-color: #f5c6cb;
+        }
+        .warning-text {
+            color: orange;
+        }
+        .security-level-selector {
+            background-color: #ecf0f1;
+            padding: 10px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .security-level-selector label {
+            margin-right: 10px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-right: 5px;
+            transition: background-color 0.3s;
+        }
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        .status-shipped {
+            color: green;
+            font-weight: bold;
+        }
+        .status-processing {
+            color: orange;
+            font-weight: bold;
+        }
+        .status-canceled {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>AIO-WebSec 💻</h1>
+        <nav>
+            <a href="{{ url_for('index') }}">Home</a>
+            <a href="{{ url_for('injection_lab') }}">1. Injection (SQLi, XSS, CmdI)</a>
+            <a href="{{ url_for('access_lab') }}">2. Access Control (IDOR, CSRF, Session)</a>
+            <a href="{{ url_for('file_system_lab') }}">3. File System (LFI/RFI, Upload, Traversal)</a>
+            <a href="{{ url_for('logic_lab') }}">4. Business Logic (Tampering, Bypass, Race)</a>
+            <a href="{{ url_for('ssrf_lab') }}">5. Request Forgery (SSRF)</a>
+            <a href="{{ url_for('advanced_lab') }}">6. Advanced Injection (SSTI, XXE, Deser.)</a>
+            <a href="{{ url_for('secrets_lab') }}">7. Secrets/Config (Exposure, Crypto)</a>
+            <a href="{{ url_for('dos_lab') }}">8. DoS/Automation (Rate Limit, Exhaustion)</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="security-level-selector">
+            <label for="security_level">Security Level:</label>
+            <form id="level-form" action="{{ url_for('set_security_level') }}" method="POST">
+                <select name="level" id="security_level" onchange="document.getElementById('level-form').submit()">
+                    <option value="0" {% if session.get('security_level', 0) == 0 %}selected{% endif %}>0 (Low - Vulnerable)</option>
+                    <option value="1" {% if session.get('security_level', 0) == 1 %}selected{% endif %}>1 (Medium - Partial Fix)</option>
+                    <option value="2" {% if session.get('security_level', 0) == 2 %}selected{% endif %}>2 (High - Secure)</option>
+                </select>
+                <noscript><button type="submit" class="btn btn-primary">Set Level</button></noscript>
+            </form>
+            <p style="margin: 0 0 0 20px; font-size: 0.9em;">
+                Current Level: <strong>
+                {% if session.get('security_level', 0) == 0 %}Low (Easy to Attack){% elif session.get('security_level', 0) == 1 %}Medium (Some Filters){% else %}High (More Secure){% endif %}
+                </strong>
+            </p>
+        </div>
+        
+        <hr>
+
+        {% block content %}
+        {% endblock %}
+    </div>
+</body>
+</html>

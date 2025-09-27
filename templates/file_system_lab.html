@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}AIO-WebSec: File System Lab{% endblock %}
+
+{% block content %}
+<div class="lab-container">
+    <h2>3. File System Lab (LFI/RFI, Path Traversal, File Upload, Web Shells)</h2>
+    <p class="description">
+        Practice Local File Inclusion (LFI), Remote File Inclusion (RFI), Path Traversal/Directory Traversal, and insecure file upload (web shells) techniques here.
+    </p>
+
+    <div class="section-box">
+        <h3>Path Traversal / Local File Inclusion (LFI)</h3>
+        <p>
+            Test if you can read system files. By default, it reads `public_info.txt`.
+            (e.g., try <code>../../private_data/admin_notes.txt</code> or <code>/etc/passwd</code> as input)
+        </p>
+        
+        <form method="GET" action="{{ url_for('file_system_lab') }}" class="file-read-form">
+            <input type="hidden" name="action" value="read_file">
+            <label for="file_path_input">File Path:</label>
+            <input type="text" id="file_path_input" name="filename" 
+                   value="{{ request.args.get('filename', 'public_info.txt') }}" required>
+            <button type="submit" class="btn btn-primary">Read File</button>
+        </form>
+
+        {% if file_content %}
+            <div class="message success" style="margin-top: 15px;">
+                <h4>File Content of <code>{{ request.args.get('filename') }}</code>:</h4>
+                <pre style="white-space: pre-wrap; word-wrap: break-word;">{{ file_content }}</pre>
+            </div>
+        {% elif file_error %}
+             <div class="message error" style="margin-top: 15px;">
+                <strong>Error:</strong> {{ file_error }}
+            </div>
+        {% endif %}
+        
+        <p class="note" style="margin-top: 20px;">
+            **[RFI Hint]** At Low Level, try loading external files by entering <code>http://</code> or <code>https://</code> URLs.
+        </p>
+    </div>
+
+    <div class="section-box">
+        <h3>Vulnerable File Upload (Web Shells)</h3>
+        <p>
+            Normally, only image files (JPEG, PNG) should be allowed.
+            At Low Security Level, due to weak server-side validation, test if you can upload **web shells** (e.g., scripts inside `.php`, `.phtml`, or `.html` files).
+        </p>
+
+        <form method="POST" action="{{ url_for('file_system_lab') }}" enctype="multipart/form-data" class="file-upload-form">
+            <input type="hidden" name="action" value="upload">
+            <label for="file_upload">Choose File:</label>
+            <input type="file" id="file_upload" name="file" required>
+            <button type="submit" class="btn btn-primary">Upload File</button>
+        </form>
+
+        {% if upload_message %}
+            <div class="message {% if 'Error' in upload_message or 'Invalid' in upload_message %}error{% else %}success{% endif %}" style="margin-top: 15px;">
+                <strong>Upload Result:</strong> {{ upload_message }}
+                {% if uploaded_filename %}
+                    <p>Uploaded File Path: <code>/uploads/{{ uploaded_filename }}</code></p>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

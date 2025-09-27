@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}AIO-WebSec: Access Control Lab{% endblock %}
+
+{% block content %}
+<div class="lab-container">
+    <h2>2. Access Control Lab (IDOR, CSRF, Session, State Abuse)</h2>
+    <p class="description">
+        Here you can practice access control vulnerabilities such as Broken Access Control (IDOR/BOLA), CSRF, session management weaknesses, and business state transition abuse.
+    </p>
+
+    {% if message %}
+        <div class="message {{ 'error' if 'DENIED' in message or 'Mismatch' in message else 'success' }}">{{ message }}</div>
+    {% endif %}
+
+    <div class="section-box">
+        <h3>Broken Object Level Authorization (IDOR)</h3>
+        <p>You are assumed to be logged in as User ID **{{ session.get('user_id', 0) }}**.</p>
+        <p>Try to view other users' orders by changing the Order ID. (e.g., in the URL <code>?order_id=102</code>)</p>
+        
+        <div class="order-details">
+            {% if order %}
+                {% if order.order_id %}
+                    <h4>Order ID: {{ order.order_id }}</h4>
+                    <p><strong>Owner User ID:</strong> {{ order.user_id }}</p>
+                    <p><strong>Item:</strong> {{ order.item }}</p>
+                    <p><strong>Current Status:</strong> 
+                        <span class="status-{{ order.status|lower }}">{{ order.status }}</span>
+                    </p>
+                {% else %}
+                    <p>Order Details Not Found or You do not have permission to view it.</p>
+                {% endif %}
+            {% else %}
+                <p>Start viewing by adding Order ID in the URL, e.g., <code>?order_id=101</code>.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="section-box">
+        <h3>Cross-Site Request Forgery (CSRF) & State Transition Abuse</h3>
+        <p>This form represents a function to change the status of the current order (Order ID: **{{ request.args.get('order_id', 101) }}**) to "Canceled".</p>
+        
+        {% if order and order.order_id %}
+            <form method="POST" action="{{ url_for('access_lab', order_id=order.order_id) }}" class="csrf-form">
+                <input type="hidden" name="action" value="cancel">
+                
+                {% if level == 0 %}
+                    <p class="warning-text">CSRF protection is not included because Security Level is LOW.</p>
+                {% else %}
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <p class="success-text">CSRF token protection is included.</p>
+                {% endif %}
+                
+                <button type="submit" class="btn btn-danger" 
+                        {% if order.status == 'Canceled' %}disabled{% endif %}>
+                        Cancel This Order (State Transition)
+                </button>
+            </form>
+        {% endif %}
+    </div>
+
+    <div class="section-box">
+        <h3>Session Management / Weak Cryptography (Informational)</h3>
+        <p>
+            To test session hijacking, steal the user's **session cookie** and attack using the relevant header.
+            At low security level, session IDs are easier to guess (or) hijack due to lack of SSL/TLS.
+        </p>
+        <p>
+            <strong>Current Session ID (Cookie Value):</strong> 
+            <code class="session-display">{{ session_id_display or 'N/A' }}</code>
+        </p>
+        <p class="note">
+            (You can find the **session** key in Developer Tools > Application > Cookies. By stealing this value, you can impersonate and view another user's session.)
+        </p>
+        
+        </div>
+
+</div>
+{% endblock %}

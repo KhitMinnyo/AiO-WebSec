@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}AIO-WebSec: Injection Lab{% endblock %}
+
+{% block content %}
+<div class="lab-container">
+    <h2>1. Injection Lab (SQLi, XSS, Command Injection)</h2>
+    <p class="description">
+        Practice the most common injection types caused by weak input validation: SQL Injection (SQLi), Cross-Site Scripting (XSS), and Command Injection (CmdI).
+    </p>
+
+    {% if output %}
+        <div class="message success">
+            <h4>Output / Result:</h4>
+            <pre>{{ output }}</pre>
+        </div>
+    {% endif %}
+
+    <div class="section-box">
+        <h3>SQL Injection (SQLi) - User Search</h3>
+        <p>
+            Search users from the database. At Low Level, **unsafe string concatenation** is used, making SQLi possible.
+            (e.g., try entering <code>' OR 1=1 --</code> as input)
+        </p>
+        
+        <form method="GET" action="{{ url_for('injection_lab') }}" class="sqli-form">
+            <input type="hidden" name="action" value="search_user">
+            <label for="username_input">Username Search Query:</label>
+            <input type="text" id="username_input" name="username" placeholder="alice" 
+                   value="{{ request.args.get('username', '') }}" required>
+            <button type="submit" class="btn btn-primary">Search User</button>
+        </form>
+
+        {% if users %}
+            <h4 style="margin-top: 15px;">Search Results:</h4>
+            <table class="data-table" style="width: 100%; border-collapse: collapse;">
+                <thead style="background-color: #ecf0f1;">
+                    <tr>
+                        <th style="padding: 8px; border: 1px solid #ddd;">ID</th>
+                        <th style="padding: 8px; border: 1px solid #ddd;">Username</th>
+                        <th style="padding: 8px; border: 1px solid #ddd;">Secret Token</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid #ddd;">{{ user.id }}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">{{ user.username }}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">{{ user.secret_token }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+
+    <div class="section-box">
+        <h3>Command Injection (CmdI) - Network Utility</h3>
+        <p>
+            A utility to test **pinging** another network/host from the server.
+            At Low Level, user input is directly passed into a **system command**, making command injection possible.
+            (e.g., try <code>127.0.0.1 && whoami</code> or <code>; ls -la</code> as input)
+        </p>
+        
+        <form method="POST" action="{{ url_for('injection_lab') }}" class="cmdi-form">
+            <input type="hidden" name="action" value="ping">
+            <label for="ip_address_input">IP Address / Hostname:</label>
+            <input type="text" id="ip_address_input" name="host" placeholder="127.0.0.1" required>
+            <button type="submit" class="btn btn-primary">Execute Ping</button>
+        </form>
+    </div>
+
+    <div class="section-box">
+        <h3>Stored Cross-Site Scripting (XSS) - Guestbook</h3>
+        <p>
+            User input is stored in the database (Stored XSS), and when displayed without output encoding, XSS occurs.
+            (e.g., try entering <code>&lt;script&gt;alert('XSSed!')&lt;/script&gt;</code> as a message)
+        </p>
+        
+        <form method="POST" action="{{ url_for('injection_lab') }}" class="xss-form">
+            <input type="hidden" name="action" value="post_comment">
+            <label for="xss_author_input">Your Name:</label>
+            <input type="text" id="xss_author_input" name="author" placeholder="Attacker" required>
+            
+            <label for="xss_message_input" style="margin-top: 10px; display: block;">Message / XSS Payload:</label>
+            <textarea id="xss_message_input" name="message" rows="3" placeholder="I found a secret!"></textarea>
+            
+            <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Post Comment</button>
+        </form>
+
+        <h4 style="margin-top: 25px;">Guestbook Entries:</h4>
+        <div class="guestbook-entries">
+            {% if guestbook_entries %}
+                {% for entry in guestbook_entries %}
+                <div class="comment-entry" style="border: 1px dashed #ccc; padding: 10px; margin-bottom: 10px; border-radius: 4px;">
+                    <p style="margin-bottom: 5px;"><strong>{{ entry.author }}</strong> ({{ entry.timestamp }}) said:</p>
+                    
+                    {% if level == 0 %}
+                        <div class="comment-message">{{ entry.message|safe }}</div>
+                    {% else %}
+                        <div class="comment-message">{{ entry.message }}</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+                <p>No comments yet. Be the first to post!</p>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}AIO-WebSec: Business Logic Lab{% endblock %}
+
+{% block content %}
+<div class="lab-container">
+    <h2>4. Business Logic Lab (Parameter Tampering, Logic Bypass, Race Condition)</h2>
+    <p class="description">
+        Practice vulnerabilities caused by abusing the **business logic** of web applications (e.g., bypassing payments or restrictions) here.
+    </p>
+
+    {% if message %}
+        <div class="message {% if 'Error' in message or 'Denied' in message %}error{% else %}success{% endif %}">
+            <strong>Result:</strong> {{ message }}
+        </div>
+    {% endif %}
+
+    <div class="section-box">
+        <h3>Pricing Manipulation / Hidden Parameter Tampering</h3>
+        <p>
+            Try making a payment without a discount code. Intercept and modify hidden parameters related to **Price** or **Discount** to check if logic bypass is possible.
+        </p>
+
+        <form method="POST" action="{{ url_for('logic_lab') }}" class="pricing-form">
+            <input type="hidden" name="action" value="purchase">
+            
+            <label for="item_select">Select Item:</label>
+            <select id="item_select" name="item" required>
+                <option value="Basic_Plan">Basic Plan ($100)</option>
+                <option value="Pro_Plan">Pro Plan ($500)</option>
+            </select>
+            
+            <input type="hidden" name="original_price" value="500.00">
+            
+            <label for="discount_code" style="margin-top: 10px; display: block;">Discount Code (Optional):</label>
+            <input type="text" id="discount_code" name="discount_code" placeholder="ENTER_FREE_CODE">
+            
+            <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Proceed to Checkout</button>
+        </form>
+    </div>
+
+    <div class="section-box">
+        <h3>Logic Bypass (State Transition Abuse)</h3>
+        <p>
+            This function sets a gift voucher to **Active**. According to logic, only **Deactivated** vouchers should be allowed to activate.
+            Try to abuse the logic by activating an already activated voucher or bypassing deactivation.
+        </p>
+
+        <form method="POST" action="{{ url_for('logic_lab') }}" class="voucher-form">
+            <input type="hidden" name="action" value="activate_voucher">
+            
+            <label for="voucher_id_input">Voucher ID (Default is Deactivated):</label>
+            <input type="text" id="voucher_id_input" name="voucher_id" value="VOUCHER_123_INACTIVE" required>
+            <button type="submit" class="btn btn-primary">Activate Voucher</button>
+        </form>
+        
+        <p class="note" style="margin-top: 10px;">
+            **[Hint]** At Low Level, state transitions (e.g., Active -> Activated) are not properly checked.
+        </p>
+    </div>
+
+    <div class="section-box">
+        <h3>Race Condition (Inventory Manipulation)</h3>
+        <p>
+            Test race conditions by trying to buy an item with low stock (<code>Flag-Item</code> has only <strong>1</strong> in stock) multiple times simultaneously. At Low Level, atomic transactions are not implemented.
+        </p>
+        
+        <div class="inventory-status">
+            <p><strong>Item:</strong> Flag-Item | **Current Stock:** {{ current_stock if current_stock is not none else 'N/A' }}</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('logic_lab') }}" class="race-condition-form">
+            <input type="hidden" name="action" value="buy_flag_item">
+            <input type="hidden" name="item_name" value="Flag-Item">
+            
+            <button type="submit" class="btn btn-danger">Attempt to Buy Flag-Item (1 Unit)</button>
+        </form>
+
+        <p class="note" style="margin-top: 10px;">
+            **[Race Condition Hint]** Use Burp Suite Intruder or a script to send **concurrent** requests to this form. Even though only one stock is available, multiple purchases may succeed.
+        </p>
+    </div>
+
+</div>
+{% endblock %}

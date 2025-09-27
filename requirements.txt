@@ -1,0 +1,4 @@
+Flask
+requests
+lxml  # For XXE parsing 
+pyyaml # YAML is for Deserialization 

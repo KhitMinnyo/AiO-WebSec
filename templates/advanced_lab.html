@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}AIO-WebSec: Advanced Injection Lab{% endblock %}
+
+{% block content %}
+<div class="lab-container">
+    <h2>6. Advanced Injection Lab (SSTI, XXE, Deserialization)</h2>
+    <p class="description">
+        Explore and test vulnerabilities that occur in deeper server-side logic such as Server-Side Template Injection (SSTI), XML External Entity (XXE), and Deserialization of Untrusted Data.
+    </p>
+
+    {% if output %}
+        <div class="message success">
+            <h4>Output / Result:</h4>
+            <pre>{{ output }}</pre>
+        </div>
+    {% endif %}
+
+    <div class="section-box">
+        <h3>Server-Side Template Injection (SSTI)</h3>
+        <p>
+            This occurs when user input is directly passed into the template engine (Jinja2) for generating greeting messages.
+            (e.g., try entering <code>{{ 7*7 }}</code> as input)
+        </p>
+        <form method="GET" action="{{ url_for('advanced_lab') }}">
+            <input type="hidden" name="action" value="greet">
+            <label for="name_input">Enter Your Name/SSTI Payload:</label>
+            <input type="text" id="name_input" name="name" placeholder="Guest" required>
+            <button type="submit" class="btn btn-primary">Generate Greeting</button>
+        </form>
+    </div>
+
+    <div class="section-box">
+        <h3>XML External Entity (XXE) Injection</h3>
+        <p>
+            This occurs when the XML parser allows external entities.
+            Try reading local files (e.g., <code>/etc/passwd</code>).
+        </p>
+        
+        <form method="POST" action="{{ url_for('advanced_lab') }}">
+            <label for="xml_data_input">XML Data Input:</label>
+            <textarea id="xml_data_input" name="xml_data" rows="8" placeholder='<product><name>Laptop</name></product>' required>
+            {%- if level == 0 -%}
+<!DOCTYPE foo [ <!ENTITY xxe SYSTEM "file:///etc/passwd" > ]>
+<product>
+    <name>&xxe;</name>
+</product>
+            {%- else -%}
+<product>
+    <name>Laptop</name>
+</product>
+            {%- endif -%}
+            </textarea>
+            <button type="submit" class="btn btn-primary">Process XML</button>
+        </form>
+    </div>
+
+    <div class="section-box">
+        <h3>Deserialization of Untrusted Data (YAML)</h3>
+        <p>
+            Code execution can occur when user-supplied serialized data (**YAML** in this lab) is deserialized insecurely.
+        </p>
+        <p>
+            Try creating Python objects using a YAML payload. (Works only at Low Level)
+        </p>
+        <form method="POST" action="{{ url_for('advanced_lab') }}">
+            <label for="yaml_data_input">YAML Serialized Data:</label>
+            <textarea id="yaml_data_input" name="yaml_data" rows="5" placeholder="key: value" required>
+            {%- if level == 0 -%}
+            # Low Level Deserialization Example Payload (Command Execution - Must be crafted carefully based on Python/YAML versions)
+            # !python/object/apply:os.system ['id']
+            # or
+            # name: Alice
+            # age: 30
+            name: DefaultUser
+            {%- else -%}
+            name: DefaultUser
+            {%- endif -%}
+            </textarea>
+            <button type="submit" class="btn btn-primary">Process YAML</button>
+        </form>
+    </div>
+
+</div>
+{% endblock %}

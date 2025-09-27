@@ -1,0 +1,3 @@
+iam/security-credentials/AIO-WebSec-Role
+latest/meta-data/security-credentials/AIO-WebSec-Role
+RoleKey: ACCESS_KEY_EXPOSED_VIA_SSRF

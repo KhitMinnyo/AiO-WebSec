@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}AIO-WebSec: Server-Side Request Forgery Lab{% endblock %}
+
+{% block content %}
+<div class="lab-container">
+    <h2>5. Server-Side Request Forgery (SSRF) Lab</h2>
+    <p class="description">
+        Practice Server-Side Request Forgery (SSRF) here to access resources inside the server's internal network or steal secrets from cloud metadata endpoints.
+    </p>
+
+    {% if message %}
+        <div class="message {% if 'Error' in message or 'Blocked' in message %}error{% else %}success{% endif %}">
+            <strong>Result:</strong> {{ message }}
+        </div>
+    {% endif %}
+
+    <div class="section-box">
+        <h3>Vulnerable URL Fetcher</h3>
+        <p>
+            This utility fetches content from a user-supplied URL on the server. At Low Security Level, there is no input filtering.
+        </p>
+
+        <form method="GET" action="{{ url_for('ssrf_lab') }}" class="ssrf-form">
+            <input type="hidden" name="action" value="fetch_url">
+            <label for="url_input">URL to Fetch:</label>
+            <input type="text" id="url_input" name="url" placeholder="https://www.google.com" 
+                   value="{{ request.args.get('url', 'http://127.0.0.1/') }}" required>
+            <button type="submit" class="btn btn-primary">Fetch Content</button>
+        </form>
+
+        {% if fetched_content %}
+            <div class="message success" style="margin-top: 15px;">
+                <h4>Fetched Content:</h4>
+                <pre style="white-space: pre-wrap; word-wrap: break-word; background-color: #eee; padding: 10px; border-radius: 4px;">{{ fetched_content }}</pre>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="section-box">
+        <h3>SSRF Attack Hints and Objectives</h3>
+        <p>
+            To exploit SSRF vulnerabilities, test if you can read the following internal resources.
+        </p>
+        
+        <ul style="list-style-type: disc; margin-left: 20px;">
+            <li>
+                **Internal File Access (LFI via SSRF):** <p class="code-hint"><code>file:///etc/passwd</code> or <code>file:///app/app.py</code></p>
+            </li>
+            <li>
+                **Internal Service Access:** <p class="code-hint"><code>http://127.0.0.1:5000/</code> (Self-access) or <code>http://127.0.0.1/internal_service.txt</code></p>
+            </li>
+            <li>
+                **Cloud Metadata Service (Simulation):** <p class="code-hint"><code>http://169.254.169.254/latest/meta-data/</code></p>
+                <p class="note">
+                    (In this lab, reading <code>http://127.0.0.1:8080/internal_service.txt</code> simulates cloud metadata exposure.)
+                </p>
+            </li>
+            <li>
+                **URL Schemes Bypass:** <p class="code-hint">At Low Level, there is no URL validation, so test if you can use schemes like <code>gopher://</code> or <code>dict://</code>.</p>
+            </li>
+        </ul>
+    </div>
+
+</div>
+{% endblock %}
